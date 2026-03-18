@@ -108,6 +108,9 @@ target_compile_definitions(aooserver PRIVATE
     # Platform
     WINDOWS=1
 
+    # Build AOO as static (avoid dllimport)
+    AOO_STATIC=1
+
     # Disable Opus codec (not used)
     USE_CODEC_OPUS=0
 
@@ -178,6 +181,7 @@ target_link_libraries(aooserver PRIVATE
     shell32     # Windows Shell
     user32      # User Interface
     uuid        # UUID library
+    wininet     # WinINet (HTTP/FTP for JUCE networking)
 )
 
 # ---------------------------------------------------------------------------
