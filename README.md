@@ -5,25 +5,40 @@ main website at https://sonobus.net .
 
 # BUILD
 
-To build it on Linux:
+All platforms use CMake (3.15+). Run all commands from the **repository root**.
 
-    cd Builds/LinuxMakefile
-    CONFIG=Release make
+## Linux
 
-And the resulting binary will be in Builds/LinuxMakefile/build/aooserver,
-which you can copy to a system binary location of your choice
-(/usr/local/bin, for example).
+Requires `libcurl` development headers (`apt install libcurl4-openssl-dev` on
+Debian/Ubuntu).
 
-To build it on Windows (using CMake + Ninja + x86_64 MinGW-w64 UCRT posix seh),
-run the following commands from the **repository root**:
+    cmake -B build -DCMAKE_BUILD_TYPE=Release
+    cmake --build build
 
-    cd Builds/Windows
-    cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw-ucrt-x86_64.cmake -DCMAKE_BUILD_TYPE=Release ../..
-    ninja
+The resulting binary is `build/aooserver`. You can install it system-wide with:
 
-You can also cross-compile from Linux by installing the `mingw-w64` package
-(`apt install mingw-w64` on Debian/Ubuntu) and running the same commands above.
-The resulting binary will be `aooserver.exe` in the build directory.
+    sudo cmake --install build
+
+or copy it manually to a location of your choice (e.g. `/usr/local/bin`).
+
+## macOS
+
+    cmake -B build -DCMAKE_BUILD_TYPE=Release
+    cmake --build build
+
+The resulting binary is `build/aooserver`.
+
+## Windows
+
+Requires [MinGW-w64](https://www.mingw-w64.org/) (UCRT, posix, seh variant)
+and [Ninja](https://ninja-build.org/).  On Debian/Ubuntu you can cross-compile
+from Linux by installing the `mingw-w64` package (`apt install mingw-w64`).
+
+    cmake -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw-ucrt-x86_64.cmake \
+          -DCMAKE_BUILD_TYPE=Release
+    cmake --build build
+
+The resulting binary is `build/aooserver.exe`.
 
 # USAGE
 

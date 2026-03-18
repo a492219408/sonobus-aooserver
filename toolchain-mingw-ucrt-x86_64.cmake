@@ -5,17 +5,17 @@
 #   - posix threading model
 #   - SEH (Structured Exception Handling) exception model
 #
-# Usage (cross-compiling from Linux):
-#   cmake -G Ninja \
+# Usage (cross-compiling from Linux, from the repo root):
+#   cmake -B build -G Ninja \
 #         -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw-ucrt-x86_64.cmake \
-#         -DCMAKE_BUILD_TYPE=Release \
-#         ../..
+#         -DCMAKE_BUILD_TYPE=Release
+#   cmake --build build
 #
-# Usage (native Windows with MinGW in PATH):
-#   cmake -G Ninja \
+# Usage (native Windows with MinGW in PATH, from the repo root):
+#   cmake -B build -G Ninja \
 #         -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw-ucrt-x86_64.cmake \
-#         -DCMAKE_BUILD_TYPE=Release \
-#         ../..
+#         -DCMAKE_BUILD_TYPE=Release
+#   cmake --build build
 
 set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_SYSTEM_PROCESSOR x86_64)
