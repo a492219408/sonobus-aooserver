@@ -75,7 +75,7 @@ std::string encrypt(const std::string& input){
 
     char output[33];
     for (int i = 0; i < 16; ++i){
-        sprintf(&output[i * 2], "%02X", result[i]);
+        snprintf(&output[i * 2], 3, "%02X", result[i]);
     }
 
     return output;
@@ -787,7 +787,7 @@ void client::wait_for_event(float timeout){
     if (fds[0].revents & POLLIN){
         // clear pipe
         char c;
-        read(waitpipe_[0], &c, 1);
+        [[maybe_unused]] auto n = read(waitpipe_[0], &c, 1);
     }
 
     if (fds[1].revents & POLLIN){
@@ -820,7 +820,7 @@ void client::wait_for_event(float timeout){
     if (FD_ISSET(waitpipe_[0], &rdset)){
         // clear pipe
         char c;
-        read(waitpipe_[0], &c, 1);
+        [[maybe_unused]] auto n = read(waitpipe_[0], &c, 1);
     }
 
     if (FD_ISSET(tcpsocket_, &rdset)){
@@ -1218,7 +1218,7 @@ void client::signal(){
 #ifdef _WIN32
     SetEvent(waitevent_);
 #else
-    write(waitpipe_[1], "\0", 1);
+    [[maybe_unused]] auto n = write(waitpipe_[1], "\0", 1);
 #endif
 }
 

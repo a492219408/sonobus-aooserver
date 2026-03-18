@@ -679,7 +679,7 @@ void server::wait_for_event(){
     if (fds[waitindex].revents & POLLIN){
         // clear pipe
         char c;
-        read(waitpipe_[0], &c, 1);
+        [[maybe_unused]] auto n = read(waitpipe_[0], &c, 1);
     }
 
     if (quit_.load()) {
@@ -871,7 +871,7 @@ void server::signal(){
 #ifdef _WIN32
     SetEvent(waitevent_);
 #else
-    write(waitpipe_[1], "\0", 1);
+    [[maybe_unused]] auto n = write(waitpipe_[1], "\0", 1);
 #endif
 }
 
