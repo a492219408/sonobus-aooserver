@@ -11,7 +11,11 @@
 #include "../JuceLibraryCode/JuceHeader.h"
 
 #include "aoo/aoo_net.hpp"
+#ifdef _WIN32
+#include <winsock2.h>
+#else
 #include <unistd.h>
+#endif
 
 #include <iostream>
 #include <signal.h>
@@ -76,6 +80,12 @@ public:
         stopServer();
 
         const ScopedLock sl (mLock); 
+
+#ifdef _WIN32
+        // Ensure Winsock is initialized before creating sockets
+        WSADATA wsaData;
+        WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
 
         int32_t err = 0;
 
@@ -343,6 +353,16 @@ static void keyboardBreakSignalHandler (int sig)
 
 static void installKeyboardBreakHandler()
 {
+#ifdef _WIN32
+    SetConsoleCtrlHandler([] (DWORD ctrlType) -> BOOL {
+        if (ctrlType == CTRL_C_EVENT || ctrlType == CTRL_BREAK_EVENT) {
+            keyboardBreakOccurred = true;
+            DBG("KEYBOARD BREAK!");
+            return TRUE;
+        }
+        return FALSE;
+    }, TRUE);
+#else
     struct sigaction saction;
     sigset_t maskSet;
     sigemptyset (&maskSet);
@@ -350,6 +370,7 @@ static void installKeyboardBreakHandler()
     saction.sa_mask = maskSet;
     saction.sa_flags = 0;
     sigaction (SIGINT, &saction, 0);
+#endif
 }
 
 #if 1
@@ -506,7 +527,11 @@ int main (int argc, char* argv[])
     
     while (!keyboardBreakOccurred) {
      
+#ifdef _WIN32
+        Sleep(20);
+#else
         usleep(20000);
+#endif
         
         server.handleEvents();                       
     }

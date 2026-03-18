@@ -14,6 +14,17 @@ And the resulting binary will be in Builds/LinuxMakefile/build/aooserver,
 which you can copy to a system binary location of your choice
 (/usr/local/bin, for example).
 
+To build it on Windows (using CMake + Ninja + x86_64 MinGW-w64 UCRT posix seh),
+run the following commands from the **repository root**:
+
+    cd Builds/Windows
+    cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=toolchain-mingw-ucrt-x86_64.cmake -DCMAKE_BUILD_TYPE=Release ../..
+    ninja
+
+You can also cross-compile from Linux by installing the `mingw-w64` package
+(`apt install mingw-w64` on Debian/Ubuntu) and running the same commands above.
+The resulting binary will be `aooserver.exe` in the build directory.
+
 # USAGE
 
 `aooserver -h` will give you the usage info, which is very basic:
