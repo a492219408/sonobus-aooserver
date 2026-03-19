@@ -10,3 +10,15 @@ services:
     ports:
       - "10998:10998/udp"
       - "10998:10998/tcp"
+    environment:
+      # AOO_LOG_MODE controls where logs are written:
+      #   stdout (default) - logs go to container log stream only
+      #   both             - logs go to container log stream AND /logs directory
+      #   file             - logs go to /logs directory only (suppresses container logs)
+      AOO_LOG_MODE: stdout
+      # Set to "true" to enable IP blocklist from /config/blocklist.txt
+      AOO_ENABLE_BLOCKLIST: "false"
+    # Uncomment the volumes below when using AOO_LOG_MODE=both|file or AOO_ENABLE_BLOCKLIST=true
+    # volumes:
+    #   - ./logs:/logs                          # required for AOO_LOG_MODE=both|file
+    #   - ./blocklist.txt:/config/blocklist.txt  # required for AOO_ENABLE_BLOCKLIST=true
