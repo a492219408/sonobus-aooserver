@@ -5,6 +5,7 @@ FROM buildpack-deps:bookworm-curl AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         cmake \
+        make \
         g++ \
         pkg-config \
         libcurl4-openssl-dev \
