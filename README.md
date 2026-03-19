@@ -78,38 +78,96 @@ docker run -d \
 
 ## Customising the port
 
-Pass `aooserver` flags through the `command` override in `compose.yaml`, or
-append them to the `docker run` command:
+Pass extra `aooserver` flags as the `command` override in `compose.yaml`, or
+append them after the image name in `docker run`:
 
 ```sh
-docker run ... sonobus_aooserver aooserver -p 12000
+docker run ... sonobus_aooserver -p 12000
 ```
 
 Or in `compose.yaml`:
 
 ```yaml
-    command: ["aooserver", "-p", "12000"]
+    command: ["-p", "12000"]
 ```
 
 Remember to update the `ports` mapping accordingly.
+
+## Environment variables
+
+The container entrypoint reads the following environment variables to
+automatically assemble CLI arguments, avoiding the need to pass raw flags.
+
+| Variable | Default | Description |
+|---|---|---|
+| `AOO_LOG_MODE` | `stdout` | Controls logging destination (see below) |
+| `AOO_ENABLE_BLOCKLIST` | `false` | Set to `true` to load `/config/blocklist.txt` |
+
+### `AOO_LOG_MODE`
+
+| Value | Behaviour |
+|---|---|
+| `stdout` (default) | Logs appear only in the container log stream (`docker logs`) |
+| `both` | Logs appear in the container log stream **and** in `/logs` |
+| `file` | Logs are written only to `/logs` (container log stream is suppressed) |
+
+When `both` or `file` is set, the entrypoint checks that `/logs` is an actual
+mount point.  If it is not mounted, a warning is printed and file logging is
+skipped to avoid silently storing logs inside the ephemeral container layer.
+
+### `AOO_ENABLE_BLOCKLIST`
+
+When set to `true`, the entrypoint passes `--blocklist /config/blocklist.txt`
+to the server.  If the file does not exist (i.e. the volume is not mounted), a
+warning is printed and the server starts without IP blocking.
+
+## Volume mounts
+
+| Mount | Purpose |
+|---|---|
+| `./logs:/logs` | Required when `AOO_LOG_MODE=both` or `AOO_LOG_MODE=file` |
+| `./blocklist.txt:/config/blocklist.txt` | Required when `AOO_ENABLE_BLOCKLIST=true` |
+
+Example `compose.yaml` with file logging and blocklist enabled:
+
+```yaml
+services:
+  sonobus-aooserver:
+    image: sonobus_aooserver
+    restart: unless-stopped
+    ports:
+      - "10998:10998/udp"
+      - "10998:10998/tcp"
+    environment:
+      AOO_LOG_MODE: both
+      AOO_ENABLE_BLOCKLIST: "true"
+    volumes:
+      - ./logs:/logs
+      - ./blocklist.txt:/config/blocklist.txt
+```
+
 
 # USAGE
 
 `aooserver -h` will give you the usage info, which is very basic:
 
     aooserver -h|--help                 Prints the list of commands
-    aooserver -l|--logdir logdirectory  Enables logging to file
+    aooserver -l|--logdir logdirectory  Enables logging to file (also keeps stderr/stdout logging)
+    aooserver --logfile-only            Suppress stderr/stdout when --logdir is active (log file only)
     aooserver -p|--port <server_port>   Specify the server port (default 10998)
     aooserver -b|--blocklist filename   File containing IP addresses to block
 
+Logging behavior:
+- No `--logdir`: logs appear only in the normal process log stream (stderr/stdout).
+- `--logdir <dir>`: logs appear in both the normal process log stream **and** the log file.
+- `--logdir <dir> --logfile-only`: logs are written only to the log file; the normal process log stream is suppressed.
+
 You can specify a different port than the default that the server uses (this
 is for both TCP and UDP). You can specify if timestamped log files should be
-created in a particular directory, otherwise logging will only go to the standard
-output (which it always does). The blocklist lets you specify a file containing IP addresses
+created in a particular directory. The blocklist lets you specify a file containing IP addresses
 that the server should block from being allowed to be used. If a line has an IP address
 followed by a comma and the word public (`1.2.3.4,public` for example), then it will allow 
 the IP to be used for private groups, but not present any of the public groups to that user.
-
 
 # SOURCE NOTES
 

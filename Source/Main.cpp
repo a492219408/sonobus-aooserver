@@ -67,8 +67,13 @@ public:
         mUseLogDir = logdir;
         updateLogging();
     }
+
+    void setLogfileOnly(bool flag) {
+        mLogfileOnly = flag;
+    }
     
     void loadBlocklist(const String & blockfilename) {
+        // getChildFile returns the absolute path unchanged when an absolute path is given
         File bfile = File::getCurrentWorkingDirectory().getChildFile(blockfilename);
 
         auto contents = bfile.loadFileAsString();
@@ -191,11 +196,14 @@ public:
         
         message << evstr;
 
-        if (mLogger) {                
-            mLogger->logMessage(message);
+        const ScopedLock sl (mLock);
+
+        if (!mLogfileOnly) {
+            cerr << message << '\n';
         }
-        else {
-            cerr << message << endl;
+
+        if (mLogger) {
+            mLogger->logMessage(message);
         }
     }
     
@@ -312,6 +320,7 @@ protected:
     int mPort = 10998;
     
     bool mLoggingEnabled = false;
+    bool mLogfileOnly = false;
     String mUseLogDir;
     
     CriticalSection mLock;
@@ -395,12 +404,17 @@ public:
         
         app.addCommand ({ "-l|--logdir",
             "-l|--logdir logdirectory",
-            "Enables logging to file",
-            "Enables logging to file in the specified directory",
+            "Enables logging to file (also keeps stdout/stderr logging)",
+            "Enables logging to file in the specified directory. Logs still appear in the normal process log stream unless --logfile-only is also specified.",
             [this] (const auto& args) { 
-                //String logdir = args.getValueForOption("-l");
-                //this->server.setLoggingEnabled(true, logdir);
-                //DBG("Set logging to: " << logdir);
+            }
+        });
+
+        app.addCommand ({ "--logfile-only",
+            "--logfile-only",
+            "Suppress stderr/stdout logging when --logdir is active",
+            "When --logdir is active, suppress the normal process log stream and write logs only to the log file.",
+            [this] (const auto& args) {
             }
         });
 
@@ -409,11 +423,6 @@ public:
             "Specify the server port (default 10998)",
             "Specify the server port (UDP and TCP) (default 10998)",
             [this] (const auto& args) { 
-                //int port = args.getValueForOption("-p").getIntValue();
-                //if (port > 0) {
-                //    this->server.setPort(port);
-                //    DBG("Set port to: " << port);
-                //}
             }
         });
         
@@ -430,6 +439,10 @@ public:
         auto logdir = arglist.removeValueForOption("-l|--logdir"); 
         if (logdir.isNotEmpty()) {        
             server.setLoggingEnabled(true, logdir);
+        }
+
+        if (arglist.removeOptionIfFound("--logfile-only")) {
+            server.setLogfileOnly(true);
         }
 
         auto portstr = arglist.removeValueForOption("-p|--port");   

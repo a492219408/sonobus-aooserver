@@ -27,10 +27,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /app/build/aooserver /usr/bin/aooserver
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+# Create directories for optional volume mounts (logs and blocklist config).
+# These are the fixed in-container paths used by the entrypoint script.
+RUN mkdir -p /logs /config \
+    && chmod 755 /logs /config \
+    && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # AOO server listens on this port for both UDP and TCP (default: 10998).
 # Override at runtime with: aooserver -p <port>
 EXPOSE 10998/udp
 EXPOSE 10998/tcp
 
-CMD ["aooserver"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD []
