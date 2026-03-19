@@ -40,6 +40,59 @@ from Linux by installing the `mingw-w64` package (`apt install mingw-w64`).
 
 The resulting binary is `build/aooserver.exe`.
 
+# DOCKER
+
+A `Dockerfile` and a `compose.yaml` are provided for running the server inside
+a container.
+
+## Build and run with Docker Compose
+
+```sh
+docker compose up -d
+```
+
+This builds the image from source and starts the container in the background,
+mapping port **10998** (UDP and TCP) to the host.  The container restarts
+automatically unless it is explicitly stopped.
+
+To stop and remove the container:
+
+```sh
+docker compose down
+```
+
+## Build and run with plain Docker
+
+```sh
+# Build the image
+docker build -t sonobus_aooserver .
+
+# Run the container
+docker run -d \
+  --name sonobus_aooserver \
+  --restart unless-stopped \
+  -p 10998:10998/udp \
+  -p 10998:10998/tcp \
+  sonobus_aooserver
+```
+
+## Customising the port
+
+Pass `aooserver` flags through the `command` override in `compose.yaml`, or
+append them to the `docker run` command:
+
+```sh
+docker run ... sonobus_aooserver aooserver -p 12000
+```
+
+Or in `compose.yaml`:
+
+```yaml
+    command: ["aooserver", "-p", "12000"]
+```
+
+Remember to update the `ports` mapping accordingly.
+
 # USAGE
 
 `aooserver -h` will give you the usage info, which is very basic:
