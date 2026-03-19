@@ -1,0 +1,12 @@
+name: sonobus
+
+services:
+  sonobus-aooserver:
+    container_name: sonobus_aooserver
+    build:
+      context: .
+    image: sonobus_aooserver
+    restart: unless-stopped
+    ports:
+      - "10998:10998/udp"
+      - "10998:10998/tcp"
