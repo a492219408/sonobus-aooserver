@@ -117,7 +117,7 @@ skipped to avoid silently storing logs inside the ephemeral container layer.
 
 ### `AOO_ENABLE_BLOCKLIST`
 
-When set to `true`, the entrypoint passes `--blocklist /config/blocklist.txt`
+When set to `true`, the entrypoint passes `--blocklist=/config/blocklist.txt`
 to the server.  If the file does not exist (i.e. the volume is not mounted), a
 warning is printed and the server starts without IP blocking.
 
@@ -159,8 +159,8 @@ services:
 
 Logging behavior:
 - No `--logdir`: logs appear only in the normal process log stream (stderr/stdout).
-- `--logdir <dir>`: logs appear in both the normal process log stream **and** the log file.
-- `--logdir <dir> --logfile-only`: logs are written only to the log file; the normal process log stream is suppressed.
+- `--logdir=<dir>`: logs appear in both the normal process log stream **and** the log file.
+- `--logdir=<dir> --logfile-only`: logs are written only to the log file; the normal process log stream is suppressed.
 
 You can specify a different port than the default that the server uses (this
 is for both TCP and UDP). You can specify if timestamped log files should be

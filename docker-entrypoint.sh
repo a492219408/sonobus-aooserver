@@ -18,14 +18,14 @@ case "$AOO_LOG_MODE" in
         ;;
     both)
         if is_mountpoint /logs; then
-            set -- "$@" --logdir /logs
+            set -- "$@" --logdir=/logs
         else
             echo "$LOGS_NOT_MOUNTED_WARN" >&2
         fi
         ;;
     file)
         if is_mountpoint /logs; then
-            set -- "$@" --logdir /logs --logfile-only
+            set -- "$@" --logdir=/logs --logfile-only
         else
             echo "$LOGS_NOT_MOUNTED_WARN" >&2
         fi
@@ -37,7 +37,7 @@ esac
 
 if [ "$AOO_ENABLE_BLOCKLIST" = "true" ]; then
     if [ -f /config/blocklist.txt ]; then
-        set -- "$@" --blocklist /config/blocklist.txt
+        set -- "$@" --blocklist=/config/blocklist.txt
     else
         echo "WARN: blocklist is enabled, but /config/blocklist.txt was not found. The server will start without IP blocking." >&2
     fi
