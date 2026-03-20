@@ -1,0 +1,6 @@
+build/
+.git/
+logs/
+dist/
+.DS_Store
+Thumbs.db

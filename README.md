@@ -15,6 +15,11 @@ Debian/Ubuntu).
     cmake -B build -DCMAKE_BUILD_TYPE=Release
     cmake --build build
 
+Or, with the included CMake preset:
+
+    cmake --preset linux-release
+    cmake --build --preset linux-release
+
 The resulting binary is `build/aooserver`. You can install it system-wide with:
 
     sudo cmake --install build
@@ -25,6 +30,11 @@ or copy it manually to a location of your choice (e.g. `/usr/local/bin`).
 
     cmake -B build -DCMAKE_BUILD_TYPE=Release
     cmake --build build
+
+Or, with the included CMake preset:
+
+    cmake --preset macos-release
+    cmake --build --preset macos-release
 
 The resulting binary is `build/aooserver`.
 
@@ -38,7 +48,25 @@ from Linux by installing the `mingw-w64` package (`apt install mingw-w64`).
           -DCMAKE_BUILD_TYPE=Release
     cmake --build build
 
+Or, with the included CMake preset:
+
+    cmake --preset windows-mingw-release
+    cmake --build --preset windows-mingw-release
+
 The resulting binary is `build/aooserver.exe`.
+
+## CMake presets
+
+The repository includes a `CMakePresets.json` file with ready-to-use presets:
+
+- `linux-release`, `linux-debug`
+- `macos-release`, `macos-debug`
+- `windows-mingw-release`, `windows-mingw-debug`
+
+Preset support requires a newer CMake version (3.23+) than the project's
+minimum baseline.
+
+Run `cmake --list-presets` to see the presets available on your current host.
 
 # DOCKER
 
@@ -145,6 +173,14 @@ services:
       - ./logs:/logs
       - ./blocklist.txt:/config/blocklist.txt
 ```
+
+## Releases
+
+GitHub Releases are published manually via the **Release** workflow in the
+Actions tab. Each run builds precompiled binaries for Linux, macOS, and
+Windows, creates a GitHub Release, and publishes the container image to GHCR
+using the chosen release tag. If desired, the workflow can also update the
+`latest` GHCR tag during the same manual run.
 
 
 # USAGE
