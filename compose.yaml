@@ -18,6 +18,10 @@ services:
       AOO_LOG_MODE: stdout
       # Set to "true" to enable IP blocklist from /config/blocklist.txt
       AOO_ENABLE_BLOCKLIST: "false"
+      # Timezone configuration for container time display and logging timestamps.
+      # Recommended format: "Region/City" (e.g., Asia/Shanghai, Europe/London).
+      # Default is UTC to ensure consistent cross-system time handling.
+      TZ: UTC
     # Uncomment the volumes below when using AOO_LOG_MODE=both|file or AOO_ENABLE_BLOCKLIST=true
     # volumes:
     #   - ./logs:/logs                          # required for AOO_LOG_MODE=both|file
