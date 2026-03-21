@@ -154,6 +154,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: release-artifacts
+          pattern: "{linux,macos,windows}-*"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
