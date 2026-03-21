@@ -354,7 +354,7 @@ static bool keyboardBreakOccurred = false;
 //==============================================================================
 static void keyboardBreakSignalHandler (int sig)
 {
-    if (sig == SIGINT) {
+    if (sig == SIGINT || sig == SIGTERM) {
         keyboardBreakOccurred = true;
         DBG("KEYBOARD BREAK!");
     }
@@ -364,7 +364,10 @@ static void installKeyboardBreakHandler()
 {
 #ifdef _WIN32
     SetConsoleCtrlHandler([] (DWORD ctrlType) -> BOOL {
-        if (ctrlType == CTRL_C_EVENT || ctrlType == CTRL_BREAK_EVENT) {
+        if (ctrlType == CTRL_C_EVENT
+            || ctrlType == CTRL_BREAK_EVENT
+            || ctrlType == CTRL_CLOSE_EVENT
+            || ctrlType == CTRL_SHUTDOWN_EVENT) {
             keyboardBreakOccurred = true;
             DBG("KEYBOARD BREAK!");
             return TRUE;
@@ -379,6 +382,7 @@ static void installKeyboardBreakHandler()
     saction.sa_mask = maskSet;
     saction.sa_flags = 0;
     sigaction (SIGINT, &saction, 0);
+    sigaction (SIGTERM, &saction, 0);
 #endif
 }
 
@@ -486,7 +490,7 @@ public:
 
    
     void systemRequestedQuit() override {
-        
+        quit();
     }
 
     void suspended() override {

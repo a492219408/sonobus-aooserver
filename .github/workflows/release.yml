@@ -1,0 +1,167 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to create and publish (example: v1.0.0)"
+        required: true
+        type: string
+      release_name:
+        description: Optional release title shown on GitHub Releases
+        required: false
+        default: ""
+        type: string
+      make_latest:
+        description: Also publish the GHCR image with the latest tag
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-x86_64
+            os: ubuntu-24.04
+            configure_preset: linux-release
+            build_preset: linux-release
+            archive_name: aooserver-linux-x86_64.tar.gz
+            binary_path: build/linux-release/aooserver
+          - name: macos-arm64
+            os: macos-14
+            configure_preset: macos-release
+            build_preset: macos-release
+            archive_name: aooserver-macos-arm64.tar.gz
+            binary_path: build/macos-release/aooserver
+          - name: windows-x86_64
+            os: windows-2022
+            configure_preset: windows-mingw-release
+            build_preset: windows-mingw-release
+            archive_name: aooserver-windows-x86_64.zip
+            binary_path: build/windows-mingw-release/aooserver.exe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake pkg-config libcurl4-openssl-dev
+
+      - name: Install macOS dependencies
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install cmake curl
+
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-toolchain
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+
+      - name: Configure Windows PATH
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: echo "C:\\msys64\\ucrt64\\bin" >> $env:GITHUB_PATH
+
+      - name: Configure CMake
+        run: cmake --preset ${{ matrix.configure_preset }}
+
+      - name: Build binary
+        run: cmake --build --preset ${{ matrix.build_preset }} --parallel
+
+      - name: Package Unix binary
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p dist
+          cp "${{ matrix.binary_path }}" dist/aooserver
+          tar -C dist -czf "${{ matrix.archive_name }}" aooserver
+
+      - name: Package Windows binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          Copy-Item "${{ matrix.binary_path }}" "dist/aooserver.exe"
+          Compress-Archive -Path "dist/aooserver.exe" -DestinationPath "${{ matrix.archive_name }}"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.name }}
+          path: ${{ matrix.archive_name }}
+          if-no-files-found: error
+
+  docker:
+    name: Publish GHCR image
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ inputs.release_tag }}
+            type=raw,value=latest,enable=${{ inputs.make_latest }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-24.04
+    needs:
+      - build
+      - docker
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: release-artifacts
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.release_tag }}
+          name: ${{ inputs.release_name || inputs.release_tag }}
+          generate_release_notes: true
+          files: |
+            release-artifacts/**/*.tar.gz
+            release-artifacts/**/*.zip
