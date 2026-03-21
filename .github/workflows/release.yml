@@ -142,6 +142,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+        env:
+          DOCKER_BUILD_SUMMARY: false
 
   release:
     name: Publish GitHub Release
@@ -154,6 +156,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: release-artifacts
+          pattern: "*-*"
 
       - name: Create GitHub release
         uses: softprops/action-gh-release@v2
